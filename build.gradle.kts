@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "de.shadowdara.daras_library"
-version = "0.1.1-SNAPSHOT"
+version = "0.1.2-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -23,4 +23,18 @@ tasks.test {
 }
 kotlin {
     jvmToolchain(21)
+}
+
+tasks {
+    jar {
+        manifest {
+            attributes["Main-Class"] = "de.shadowdara.daras_library.Main"
+        }
+
+        // nur dein Code rein, keine dependencies
+        from(sourceSets.main.get().output)
+
+        // optional: verhindern, dass ungewollt was reingepackt wird
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    }
 }
