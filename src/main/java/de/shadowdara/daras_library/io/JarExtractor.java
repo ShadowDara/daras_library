@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.jar.*;
 
 import static de.shadowdara.daras_library.io.DirKt.getCallerJarDirectory;
@@ -62,15 +63,27 @@ public class JarExtractor {
     */
 
     public static void extractFile(String inputPath, String outputPath) {
-        Path source = Paths.get(inputPath);
-        Path target = Paths.get(getCallerJarDirectory() + outputPath);
+        Path target = Paths.get(String.valueOf(DirKt.getCallerJarDirectory()), outputPath);
 
-        try {
-            // Datei kopieren (überschreibt, falls vorhanden)
-            Files.copy(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("File copied succesfully");
+        try (InputStream in = JarExtractor.class.getClassLoader().getResourceAsStream(inputPath)) {
+            if (in == null) {
+                System.err.println("Resource not found in JAR: " + inputPath);
+                return;
+            }
+
+            // Zielverzeichnis anlegen, falls nicht vorhanden
+            Path parentDir = target.getParent();
+            if (parentDir != null && !Files.exists(parentDir)) {
+                Files.createDirectories(parentDir);
+            }
+
+            // Stream zur Datei schreiben
+            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Extracted: " + inputPath + " → " + target.toAbsolutePath());
+
         } catch (IOException e) {
-            System.err.println("Error while copying File: " + e.getMessage());
+            System.err.println("Error while extracting: " + inputPath);
+            e.printStackTrace();
         }
     }
 }
